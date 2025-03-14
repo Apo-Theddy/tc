@@ -1,7 +1,9 @@
 mod commands;
 
 use clap::Parser;
-use commands::{ai::AICommands, CommandHandler, DirCommands, FileCommands};
+use commands::{
+    ai::AICommands, navigation::NavigationCommands, CommandHandler, DirCommands, FileCommands,
+};
 use dotenvy::{self, dotenv};
 
 #[derive(Debug, Parser)]
@@ -14,6 +16,9 @@ enum Commands {
 
     #[command(subcommand)]
     AI(AICommands),
+
+    #[command(subcommand)]
+    CD(NavigationCommands),
 }
 
 #[tokio::main]
@@ -26,5 +31,6 @@ async fn main() {
         Commands::D(dir_cmd) => dir_cmd.execute().await,
         Commands::F(file_cmd) => file_cmd.execute().await,
         Commands::AI(ai_cmd) => ai_cmd.execute().await,
+        Commands::CD(navigation_cmd) => navigation_cmd.execute().await,
     }
 }
