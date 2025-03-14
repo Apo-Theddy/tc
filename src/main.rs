@@ -1,11 +1,8 @@
 mod commands;
 
-use clap::{Parser, Subcommand};
-use colored::*;
-use std::fs;
-use std::process::Command;
-
-use commands::{DirCommands, FileCommands};
+use clap::Parser;
+use commands::{ai::AICommands, CommandHandler, DirCommands, FileCommands};
+use dotenvy::{self, dotenv};
 
 #[derive(Debug, Parser)]
 enum Commands {
@@ -14,50 +11,20 @@ enum Commands {
 
     #[command(subcommand)]
     D(DirCommands),
+
+    #[command(subcommand)]
+    AI(AICommands),
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
+    dotenv().ok();
+
     let args = Commands::parse();
 
     match args {
-        Commands::F(file_cmd) => match file_cmd {
-            FileCommands::L => {
-                #[cfg(target_os = "windows")]
-                Command::new("dir")
-                    .spawn()
-                    .expect("Failed to execute command");
-
-                #[cfg(target_os = "linux")]
-                Command::new("ls")
-                    .spawn()
-                    .expect("Failed to execute command");
-
-                #[cfg(target_os = "macos")]
-                let output = Command::new("ls")
-                    .output()
-                    .expect("Failed to execute command");
-
-                let output_str = String::from_utf8_lossy(&output.stdout);
-                for line in output_str.lines() {
-                    let path = line.trim();
-                    if let Ok(metadata) = fs::metadata(path) {
-                        if metadata.is_file() {
-                            println!("📄 {}", line.blue());
-                        } else if metadata.is_dir() {
-                            println!("📂 {}", line.green());
-                        }
-                    }
-                }
-            }
-            FileCommands::C { filename } => {}
-            FileCommands::D { filename } => {}
-            FileCommands::F { filename } => {}
-        },
-        Commands::D(dir_cmd) => match dir_cmd {
-            DirCommands::L => {}
-            DirCommands::C { dirname } => {}
-            DirCommands::D => {}
-            DirCommands::F { dirname } => {}
-        },
+        Commands::D(dir_cmd) => dir_cmd.execute().await,
+        Commands::F(file_cmd) => file_cmd.execute().await,
+        Commands::AI(ai_cmd) => ai_cmd.execute().await,
     }
 }

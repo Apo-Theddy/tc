@@ -1,3 +1,3 @@
 pub trait CommandHandler {
-    fn execute(&self);
+    async fn execute(&self);
 }

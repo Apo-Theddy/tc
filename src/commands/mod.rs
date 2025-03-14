@@ -1,3 +1,4 @@
+pub mod ai;
 pub mod command_handler;
 pub mod dir;
 pub mod file;
